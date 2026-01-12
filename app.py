@@ -1,36 +1,47 @@
-import json
-import os
-import asyncio
-import random
+import json, time, ssl, os, asyncio, threading
 from aiohttp import web
+from websocket import WebSocketApp
 
-# --- SIMULATOR MODE ---
-# Kode ini akan mengirim data acak setiap 1 detik untuk ngetes tampilan
+# --- KONFIGURASI FIX ---
+AUTH_TOKEN = "cb1af94b-28f0-4d76-b827-37c4df023c2c" 
+DEVICE_ID = "c47bb81b535832546db3f7f016eb01a0"
+
 BRIDGE_CLIENTS = set()
 
-async def broadcast_fake_data():
-    """Fungsi untuk mengirim data palsu agar dashboard bergerak"""
-    price = 10420.00
-    while True:
-        if BRIDGE_CLIENTS:
-            price += random.uniform(-1.0, 1.0)
-            data = {
-                "price": round(price, 2),
-                "rsi": random.randint(30, 70),
-                "countdown": random.randint(1, 60),
-                "call_pct": random.randint(40, 60),
-                "put_pct": random.randint(40, 60)
-            }
-            payload = json.dumps(data)
-            for ws in list(BRIDGE_CLIENTS):
-                try:
-                    await ws.send_str(payload)
-                except:
-                    BRIDGE_CLIENTS.remove(ws)
-        await asyncio.sleep(1)
+class StockityBridge:
+    def __init__(self, loop):
+        self.loop = loop
 
-async def handle_index(request):
-    return web.FileResponse('./index.html')
+    async def broadcast(self, data):
+        if not BRIDGE_CLIENTS: return
+        payload = json.dumps(data)
+        for ws in list(BRIDGE_CLIENTS):
+            try: await ws.send_str(payload)
+            except: BRIDGE_CLIENTS.remove(ws)
+
+    def on_message(self, ws, message):
+        try:
+            data = json.loads(message)
+            if "data" in data and len(data["data"]) > 0:
+                asset = data["data"][0].get("assets", [{}])[0]
+                if asset.get("ric") == "Z-CRY/IDX":
+                    packet = {
+                        "price": float(asset["rate"]),
+                        "ts": time.time()
+                    }
+                    asyncio.run_coroutine_threadsafe(self.broadcast(packet), self.loop)
+        except: pass
+
+    def start(self):
+        def run():
+            while True:
+                try:
+                    ws = WebSocketApp("wss://as.stockitymob.com/",
+                        header={"authorization-token": AUTH_TOKEN, "device-id": DEVICE_ID},
+                        on_message=self.on_message)
+                    ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+                except: time.sleep(5)
+        threading.Thread(target=run, daemon=True).start()
 
 async def handle_ws(request):
     ws = web.WebSocketResponse()
@@ -38,24 +49,19 @@ async def handle_ws(request):
     BRIDGE_CLIENTS.add(ws)
     try:
         async for msg in ws: pass
-    finally:
-        BRIDGE_CLIENTS.remove(ws)
+    finally: BRIDGE_CLIENTS.remove(ws)
     return ws
 
 async def main():
+    loop = asyncio.get_running_loop()
+    bridge = StockityBridge(loop)
+    bridge.start()
     app = web.Application()
-    app.router.add_get('/', handle_index)
+    app.router.add_get('/', lambda r: web.FileResponse('./index.html'))
     app.router.add_get('/ws', handle_ws)
-    
-    # Jalankan simulator di background
-    asyncio.create_task(broadcast_fake_data())
-    
-    port = int(os.environ.get("PORT", 8080))
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, '0.0.0.0', port)
-    print(f"Simulator aktif di port {port}")
-    await site.start()
+    await web.TCPSite(runner, '0.0.0.0', int(os.environ.get("PORT", 8080))).start()
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
