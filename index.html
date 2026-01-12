@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHOENIX REACT CLONE (V1)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+        
+        body { 
+            background-color: #010401; 
+            color: #10b981;
+            font-family: 'Space Mono', monospace; 
+            margin: 0; 
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .icon { width: 16px; height: 16px; stroke-width: 2; stroke: currentColor; fill: none; }
+        .glass-panel { background: rgba(0, 255, 65, 0.05); backdrop-filter: blur(4px); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 0.75rem; }
+        #matrixCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.1; pointer-events: none; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.2); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="matrixCanvas"></canvas>
+
+    <div class="min-h-screen bg-[#010401] flex items-center justify-center p-4 relative">
+        <div class="w-full max-w-[380px] bg-[#020802] border border-emerald-500/30 rounded-[2rem] overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]">
+            
+            <div class="h-10 bg-emerald-500/10 border-b border-emerald-500/10 flex items-center justify-between px-4 shrink-0">
+                <div class="flex items-center gap-2">
+                    <svg class="icon text-emerald-400" viewBox="0 0 24 24"><path d="M4 14.899A7 7 0 1 1 15.71 8h1a1 1 0 1 1 1-1V7a1 1 0 1 1-1-1h-1a1 1 0 1 1 1-1V4a1 1 0 0 1-1-1H5a1 1 0 0 1-1 1v10a1 1 0 0 1-1 1"></path></svg>
+                    <span class="text-[8px] font-black tracking-[0.4em] text-emerald-400/80 uppercase">PHOENIX_V12_AI</span>
+                </div>
+                <div id="status-text" class="flex gap-3 text-[8px] font-black">
+                    <span id="trend-text" class="text-blue-400 uppercase">T: NEUTRAL</span>
+                    <span id="vol-text" class="text-orange-400 uppercase">V: LOW</span>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto">
+                <div class="p-5 text-center border-b border-emerald-500/5 bg-emerald-500/5">
+                    <div class="text-[7px] uppercase tracking-[0.4em] text-emerald-500/30 mb-2 font-bold">Live Market Feed (Z-CRY/IDX)</div>
+                    <div id="price-main" class="text-5xl font-black text-emerald-400 transition-all duration-200">0.00000</div>
+                    <div id="price-diff" class="flex items-center justify-center gap-1 mt-1 font-bold text-[8px] uppercase text-emerald-500/40">
+                        <svg id="icon-trend" class="icon text-emerald-500/40" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"></path></svg>
+                        <span id="text-trend">Rising</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-px bg-emerald-500/10 shrink-0">
+                    <div class="bg-[#020802] p-3 flex flex-col items-center justify-center">
+                        <span class="text-[7px] text-emerald-500/40 uppercase mb-1">RSI(14)</span>
+                        <span id="rsi-val" class="text-sm font-black">50.00</span>
+                    </div>
+                    <div class="bg-[#020802] p-3 flex flex-col items-center justify-center">
+                        <span class="text-[7px] text-emerald-500/40 uppercase mb-1">Timer</span>
+                        <span id="timer-val" class="text-sm font-black">60s</span>
+                    </div>
+                </div>
+
+                <div class="px-6 py-3 bg-emerald-500/5 border-b border-emerald-500/5">
+                    <div class="flex justify-between text-[7px] font-black mb-1 uppercase tracking-[0.2em] text-emerald-500/40">
+                        <span>CALL <span id="call-val">50</span>%</span>
+                        <span>PUT <span id="put-val">50</span>%</span>
+                    </div>
+                    <div class="h-3 w-full bg-emerald-900/20 rounded overflow-hidden flex">
+                        <div id="bar-call" class="h-full bg-emerald-500 transition-all duration-500" style="width: 50%"></div>
+                        <div id="bar-put" class="h-full bg-rose-500 transition-all duration-500" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <div class="p-4 shrink-0">
+                    <div class="bg-emerald-950/20 border border-emerald-500/10 rounded-2xl p-4">
+                        <div class="text-[7px] font-black text-emerald-400/60 mb-2 uppercase tracking-[0.2em]">AI PREDICTOR OUTPUT</div>
+                        <p id="ai-output" class="text-[9px] text-emerald-100/90 leading-relaxed">Menunggu sinkronisasi data...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="h-8 bg-black border-t border-emerald-500/5 flex items-center px-6 shrink-0">
+                <div id="footer-log" class="text-[7px] text-emerald-500/20 uppercase font-bold tracking-[0.2em]">SYSTEM STANDBY •</div>
+            </div>
+
+            <div id="trade-overlay" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.98); z-index: 50; flex-direction: column; align-items: center; justify-content: center; border: 5px solid #10b981;">
+                <div class="text-sm tracking-[1em] mb-4 opacity-50 uppercase font-black">Execution Command</div>
+                <div id="cd-num" class="text-9xl font-black italic">60</div>
+                <div id="cd-type" class="mt-8 px-10 py-3 border-4 border-[#10b981] text-4xl font-black uppercase bg-[#10b981] text-black animate-pulse">BUY</div>
+                <div id="result-display" class="mt-8 text-6xl font-black opacity-0">WIN</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIKA KONEKSI OTOMATIS KE RENDER ---
+        let lastPrice = 0;
+        let analysis = null;
+        const ui = {
+            price: document.getElementById("price-main"),
+            rsiVal: document.getElementById("rsi-val"),
+            timerVal: document.getElementById("timer-val"),
+            trendTxt: document.getElementById("trend-text"),
+            barCall: document.getElementById("bar-call"),
+            barPut: document.getElementById("bar-put"),
+            callTxt: document.getElementById("call-val"),
+            putTxt: document.getElementById("put-val"),
+            aiOutput: document.getElementById("ai-output"),
+            statusLog: document.getElementById("footer-log")
+        };
+
+        function connectWS() {
+            // Trik utama: Gunakan alamat host saat ini (Render)
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            
+            const socket = new WebSocket(wsUrl);
+
+            socket.onopen = () => {
+                ui.statusLog.innerText = "LINK_ESTABLISHED_PHOENIX_V1";
+                ui.statusLog.style.color = "#10b981";
+            };
+
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                
+                if (data.price) {
+                    ui.price.innerText = data.price.toFixed(5);
+                    ui.price.style.color = data.price >= lastPrice ? "#10b981" : "#f43f5e";
+                    lastPrice = data.price;
+
+                    ui.rsiVal.innerText = data.rsi.toFixed(2);
+                    ui.timerVal.innerText = Math.floor(data.countdown) + "s";
+                    
+                    // Update Progress Bars
+                    ui.barCall.style.width = data.call_pct + "%";
+                    ui.barPut.style.width = data.put_pct + "%";
+                    ui.callTxt.innerText = data.call_pct;
+                    ui.putTxt.innerText = data.put_pct;
+                }
+            };
+
+            socket.onclose = () => {
+                ui.statusLog.innerText = "RECONNECTING...";
+                setTimeout(connectWS, 3000);
+            };
+        }
+
+        // --- MATRIX EFFECT ---
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+        let drops = [];
+        function initMatrix() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            drops = Array(Math.floor(canvas.width / 20)).fill(1);
+        }
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#003b00";
+            ctx.font = "15px monospace";
+            drops.forEach((y, i) => {
+                ctx.fillText("01", i * 20, y * 20);
+                if (y * 20 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            });
+        }
+
+        initMatrix();
+        setInterval(drawMatrix, 50);
+        window.addEventListener('resize', initMatrix);
+
+        // Mulai koneksi
+        connectWS();
+    </script>
+</body>
+</html>
