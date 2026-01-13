@@ -118,13 +118,39 @@ async def main():
     TitaniumEngine(loop).start()
     
     app = web.Application()
-    app.router.add_get('/', lambda r: web.FileResponse('./web.html'))
+    
+    # Deteksi lokasi folder saat ini
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Jalur file absolut
+    index_path = os.path.join(base_dir, 'index.html')
+    web_path = os.path.join(base_dir, 'web.html')
+
+    # Cek keberadaan file di Log Render untuk diagnosa
+    if not os.path.exists(index_path):
+        print(f"!! PERINGATAN: File index.html tidak ditemukan di {index_path}")
+    if not os.path.exists(web_path):
+        print(f"!! PERINGATAN: File web.html tidak ditemukan di {web_path}")
+
+    # Handler File yang lebih stabil
+    async def serve_index(request):
+        return web.FileResponse(index_path)
+
+    async def serve_web(request):
+        return web.FileResponse(web_path)
+
+    # Routing
+    app.router.add_get('/', serve_index)
+    app.router.add_get('/web.html', serve_web)
     app.router.add_get('/ws', handle_ws)
     
+    # Jalankan Server
     port = int(os.environ.get("PORT", 10000))
     runner = web.AppRunner(app)
     await runner.setup()
-    await web.TCPSite(runner, '0.0.0.0', port).start()
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    
     print(f"--- TITANIUM SERVER READY ON PORT {port} ---")
     await asyncio.Event().wait()
 
