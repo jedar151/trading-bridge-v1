@@ -4,6 +4,7 @@ import time
 import threading
 import asyncio
 import ssl
+import traceback # Penting untuk melihat error
 from aiohttp import web
 from websocket import WebSocketApp
 
@@ -12,13 +13,8 @@ AUTH_TOKEN = os.environ.get("AUTH_TOKEN", "cb1af94b-28f0-4d76-b827-37c4df023c2c"
 DEVICE_ID = os.environ.get("DEVICE_ID", "c47bb81b535832546db3f7f016eb01a0")
 ASSET = "Z-CRY/IDX"
 
-# --- DEBUG: CEK TOKEN APA YANG DIPAKAI ---
-print(f"---------------------------------------------------")
-print(f"SYSTEM MULAI...")
-print(f"TOKEN YANG SEDANG DIGUNAKAN: {AUTH_TOKEN[:15]}...")
-print(f"---------------------------------------------------")
-
-class ZiroFinalEngine:
+# --- ENGINE ---
+class ZiroEngine:
     def __init__(self):
         self.clients = set()
         self.loop = None
@@ -37,9 +33,7 @@ class ZiroFinalEngine:
 
     def on_message(self, ws, message):
         try:
-            # Kita matikan print raw data agar bersih
             data = json.loads(message)
-
             if "data" in data and data["data"]:
                 for item in data["data"]:
                     assets = item.get("assets", [])
@@ -48,7 +42,6 @@ class ZiroFinalEngine:
                             try:
                                 price = float(asset["rate"])
                                 self.last_price = price
-                                
                                 self.history.append(price)
                                 if len(self.history) > 14: self.history.pop(0)
                                 if len(self.history) >= 14:
@@ -70,24 +63,22 @@ class ZiroFinalEngine:
                                     asyncio.run_coroutine_threadsafe(self.broadcast(packet), self.loop)
                                     
                                 print(f">> UPDATE: {price} | RSI: {round(self.rsi, 2)}")
-
                             except ValueError:
                                 pass 
         except Exception as e:
-            print(f">> Error parsing: {e}")
+            print(f">> Parsing Error: {e}")
 
     def on_open(self, ws):
-        print(">> TERHUBUNG KE STOCKITY STREAM")
+        print(">> TERHUBUNG STOCKITY")
         ws.send(json.dumps({"action": "subscribe", "rics": [ASSET]}))
         ws.send(json.dumps({"event": "subscribe", "topic": f"asset:{ASSET}"}))
 
     def on_error(self, ws, error):
-        print(f">> ERROR KONEKSI: {error}")
-        if "401" in str(error):
-            print("!! PERINGATAN: TOKEN DITOLAK (401) !!")
+        print(f">> WS Error: {error}")
+        if "401" in str(error): print("!! TOKEN SALAH !!")
 
     def on_close(self, ws, close_status_code, close_msg):
-        print(">> TERPUTUS. REKONEKSI 5 DETIK...")
+        print(">> PUTUS, RECONNECT...")
 
     def start_ws(self):
         url = "wss://as.stockitymob.com/"
@@ -108,10 +99,11 @@ class ZiroFinalEngine:
                 )
                 ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
             except Exception as e:
-                print(f">> Critical Error: {e}")
+                print(f">> Critical: {e}")
             time.sleep(5)
 
-engine = ZiroFinalEngine()
+# --- SERVER ---
+engine = ZiroEngine()
 
 async def handle_ws(request):
     ws = web.WebSocketResponse()
@@ -125,19 +117,32 @@ async def handle_ws(request):
         engine.clients.remove(ws)
     return ws
 
-async def index_page(request):
+async def handle_index(request):
     return web.FileResponse('index.html')
 
-async def dash_page(request):
+async def handle_web(request):
     return web.FileResponse('web.html')
 
 app = web.Application()
-app.router.add_get('/', index_page)
-app.router.add_get('/web.html', dash_page)
+app.router.add_get('/', handle_index)
+app.router.add_get('/web.html', handle_web)
 app.router.add_get('/ws', handle_ws)
 
+# --- MAIN RUNNER ---
 if __name__ == "__main__":
-    engine.loop = asyncio.get_event_loop()
-    threading.Thread(target=engine.start_ws, daemon=True).start()
-    port = int(os.environ.get("PORT", 8080))
-    web.run_app(app, port=port)
+    try:
+        print("Starting System...")
+        engine.loop = asyncio.get_event_loop()
+        threading.Thread(target=engine.start_ws, daemon=True).start()
+        
+        port = int(os.environ.get("PORT", 8080))
+        print(f"Listening on Port {port}")
+        
+        web.run_app(app, port=port)
+        
+    except Exception as e:
+        # Bagian ini akan MENCETAK ERROR jika terjadi status 2
+        print("-" * 30)
+        print("!!! DETECTED ERROR !!!")
+        print(traceback.format_exc())
+        print("-" * 30)
