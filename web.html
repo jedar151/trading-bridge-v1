@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PHOENIX TITANIUM DASHBOARD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        body { background: #0a0a0a; color: white; overflow: hidden; }
+        .neon-border { border: 1px solid rgba(0, 255, 65, 0.2); box-shadow: 0 0 15px rgba(0, 255, 65, 0.1); }
+    </style>
+</head>
+<body class="p-4">
+    <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-3 space-y-4">
+            <div class="bg-zinc-900/50 p-4 rounded-xl neon-border">
+                <h2 class="text-xs text-gray-500 uppercase">Current Price</h2>
+                <div id="price-display" class="text-3xl font-black text-green-400">0.00</div>
+            </div>
+            <div class="bg-zinc-900/50 p-4 rounded-xl neon-border">
+                <h2 class="text-xs text-gray-500 uppercase">AI Signal</h2>
+                <div id="signal-display" class="text-2xl font-bold text-gray-600">WAITING...</div>
+            </div>
+        </div>
+
+        <div class="col-span-9 bg-zinc-900/50 p-2 rounded-xl neon-border" style="height: 85vh;">
+            <div id="chart-container" style="width: 100%; height: 100%;"></div>
+        </div>
+    </div>
+
+    <script>
+        // KONEKSI AUTOMATIS KE SERVER RENDER
+        const protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const socket = new WebSocket(protocol + location.host + '/ws');
+        
+        // SETUP CHART
+        const chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
+            layout: { backgroundColor: 'transparent', textColor: '#d1d4dc' },
+            grid: { vertLines: { color: '#1f1f1f' }, horzLines: { color: '#1f1f1f' } },
+            timeScale: { timeVisible: true, secondsVisible: true }
+        });
+        const candleSeries = chart.addLineSeries({ color: '#00ff41', lineWidth: 2 });
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            // Update Harga
+            document.getElementById('price-display').innerText = data.price.toFixed(2);
+            
+            // Update Chart
+            candleSeries.update({ time: Math.floor(Date.now() / 1000), value: data.price });
+
+            // Logika Sinyal Sederhana (Titanium Logic)
+            const sig = document.getElementById('signal-display');
+            if (data.rsi > 70) { sig.innerText = "SELL"; sig.className = "text-2xl font-bold text-red-500"; }
+            else if (data.rsi < 30) { sig.innerText = "BUY"; sig.className = "text-2xl font-bold text-green-500"; }
+            else { sig.innerText = "NEUTRAL"; sig.className = "text-2xl font-bold text-gray-500"; }
+        };
+
+        socket.onclose = () => { alert("Koneksi ke Server Terputus! Refresh Halaman."); };
+    </script>
+</body>
+</html>
