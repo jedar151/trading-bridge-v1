@@ -1,62 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>PHOENIX TITANIUM DASHBOARD</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TITANIUM PHOENIX v2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #0a0a0a; color: white; overflow: hidden; }
-        .neon-border { border: 1px solid rgba(0, 255, 65, 0.2); box-shadow: 0 0 15px rgba(0, 255, 65, 0.1); }
+        body { background: #020202; color: #e0e0e0; font-family: 'Rajdhani', sans-serif; overflow-x: hidden; }
+        .neon-text { text-shadow: 0 0 10px rgba(0, 255, 65, 0.5); }
+        .glass-card { background: rgba(15, 15, 15, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .bar-glow { box-shadow: 0 0 15px rgba(0, 255, 65, 0.3); }
+        #price { font-family: 'Orbitron', sans-serif; }
     </style>
 </head>
-<body class="p-4">
-    <div class="grid grid-cols-12 gap-4">
-        <div class="col-span-3 space-y-4">
-            <div class="bg-zinc-900/50 p-4 rounded-xl neon-border">
-                <h2 class="text-xs text-gray-500 uppercase">Current Price</h2>
-                <div id="price-display" class="text-3xl font-black text-green-400">0.00</div>
-            </div>
-            <div class="bg-zinc-900/50 p-4 rounded-xl neon-border">
-                <h2 class="text-xs text-gray-500 uppercase">AI Signal</h2>
-                <div id="signal-display" class="text-2xl font-bold text-gray-600">WAITING...</div>
-            </div>
+<body class="p-4 md:p-8">
+    <div class="max-w-5xl mx-auto mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold tracking-widest text-white italic">TITANIUM <span class="text-emerald-500">PHOENIX</span></h1>
+            <p class="text-xs text-emerald-500/50 tracking-tighter">QUANTUM CONNECTION BRIDGE ACTIVE</p>
         </div>
-
-        <div class="col-span-9 bg-zinc-900/50 p-2 rounded-xl neon-border" style="height: 85vh;">
-            <div id="chart-container" style="width: 100%; height: 100%;"></div>
+        <div id="status-tag" class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-500 animate-pulse">
+            SYSTEM STABLE
         </div>
     </div>
 
-    <script>
-        // KONEKSI AUTOMATIS KE SERVER RENDER
-        const protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-        const socket = new WebSocket(protocol + location.host + '/ws');
+    <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        // SETUP CHART
-        const chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
-            layout: { backgroundColor: 'transparent', textColor: '#d1d4dc' },
-            grid: { vertLines: { color: '#1f1f1f' }, horzLines: { color: '#1f1f1f' } },
-            timeScale: { timeVisible: true, secondsVisible: true }
-        });
-        const candleSeries = chart.addLineSeries({ color: '#00ff41', lineWidth: 2 });
+        <div class="glass-card p-6 rounded-3xl col-span-1 md:col-span-2">
+            <h3 class="text-gray-500 text-sm font-medium mb-2 uppercase tracking-widest">Market Value (Z-CRY/IDX)</h3>
+            <div id="price" class="text-6xl md:text-7xl font-bold text-white mb-2">0.00000</div>
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></div>
+                <span class="text-[10px] text-gray-400 uppercase tracking-widest">Live Feed from Asia Cluster</span>
+            </div>
+        </div>
+
+        <div class="glass-card p-6 rounded-3xl flex flex-col justify-center items-center text-center">
+            <h3 class="text-gray-500 text-sm font-medium mb-4 uppercase tracking-widest">AI Decision</h3>
+            <div id="signal-box" class="p-4 rounded-2xl border border-white/5 w-full">
+                <div id="signal-text" class="text-2xl font-black text-gray-700">ANALYZING...</div>
+                <div id="signal-desc" class="text-[10px] text-gray-500 mt-1 uppercase">Waiting for Data Stream</div>
+            </div>
+        </div>
+
+        <div class="glass-card p-6 rounded-3xl col-span-1 md:col-span-3">
+            <div class="flex justify-between items-end mb-4">
+                <h3 class="text-gray-500 text-sm font-medium uppercase tracking-widest">Majority Opinion</h3>
+                <div class="text-right">
+                    <span class="text-emerald-400 text-xl font-bold" id="call-pct">50%</span>
+                    <span class="text-gray-600 mx-2">VS</span>
+                    <span class="text-rose-500 text-xl font-bold" id="put-pct">50%</span>
+                </div>
+            </div>
+            <div class="w-full h-4 bg-zinc-800 rounded-full overflow-hidden flex bar-glow">
+                <div id="call-bar" class="h-full bg-emerald-500 transition-all duration-700 ease-out" style="width: 50%"></div>
+                <div id="put-bar" class="h-full bg-rose-600 transition-all duration-700 ease-out" style="width: 50%"></div>
+            </div>
+            <div class="flex justify-between mt-2 text-[10px] text-gray-500 uppercase tracking-widest">
+                <span>Bullish Strength</span>
+                <span>Bearish Strength</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const priceEl = document.getElementById('price');
+        const callBar = document.getElementById('call-bar');
+        const putBar = document.getElementById('put-bar');
+        const callPct = document.getElementById('call-pct');
+        const putPct = document.getElementById('put-pct');
+        const sigText = document.getElementById('signal-text');
+        const sigBox = document.getElementById('signal-box');
+        const sigDesc = document.getElementById('signal-desc');
+
+        // Koneksi ke Backend Render
+        const socket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
 
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            
-            // Update Harga
-            document.getElementById('price-display').innerText = data.price.toFixed(2);
-            
-            // Update Chart
-            candleSeries.update({ time: Math.floor(Date.now() / 1000), value: data.price });
 
-            // Logika Sinyal Sederhana (Titanium Logic)
-            const sig = document.getElementById('signal-display');
-            if (data.rsi > 70) { sig.innerText = "SELL"; sig.className = "text-2xl font-bold text-red-500"; }
-            else if (data.rsi < 30) { sig.innerText = "BUY"; sig.className = "text-2xl font-bold text-green-500"; }
-            else { sig.innerText = "NEUTRAL"; sig.className = "text-2xl font-bold text-gray-500"; }
+            if (data.type === 'tick') {
+                const oldPrice = parseFloat(priceEl.innerText);
+                priceEl.innerText = data.price.toFixed(5);
+                priceEl.classList.toggle('text-emerald-400', data.price > oldPrice);
+                priceEl.classList.toggle('text-rose-400', data.price < oldPrice);
+            }
+
+            if (data.type === 'sentiment') {
+                const call = data.data.call;
+                const put = data.data.put;
+                
+                callBar.style.width = call + '%';
+                putBar.style.width = put + '%';
+                callPct.innerText = call + '%';
+                putPct.innerText = put + '%';
+
+                // LOGIKA SIGNAL
+                if (call >= 65) {
+                    sigText.innerText = "STRONG BUY";
+                    sigText.className = "text-3xl font-black text-emerald-500 neon-text";
+                    sigBox.style.borderColor = "rgba(16, 185, 129, 0.4)";
+                    sigDesc.innerText = "Heavy Bullish Pressure Detected";
+                } else if (put >= 65) {
+                    sigText.innerText = "STRONG SELL";
+                    sigText.className = "text-3xl font-black text-rose-500";
+                    sigBox.style.borderColor = "rgba(225, 29, 72, 0.4)";
+                    sigDesc.innerText = "Heavy Bearish Pressure Detected";
+                } else {
+                    sigText.innerText = "NEUTRAL";
+                    sigText.className = "text-2xl font-black text-gray-500";
+                    sigBox.style.borderColor = "rgba(255, 255, 255, 0.05)";
+                    sigDesc.innerText = "Market Sideways - Wait";
+                }
+            }
         };
 
-        socket.onclose = () => { alert("Koneksi ke Server Terputus! Refresh Halaman."); };
+        socket.onclose = () => {
+            document.getElementById('status-tag').innerText = "CONNECTION LOST - RECONNECTING...";
+            document.getElementById('status-tag').className = "px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-[10px] text-rose-500";
+        };
     </script>
 </body>
-</html>
+    </html>
