@@ -2,29 +2,36 @@ import json, time, ssl, os, asyncio, threading, requests
 from aiohttp import web
 from websocket import WebSocketApp
 
-# --- KONFIGURASI ---
-AUTH_TOKEN = os.environ.get("AUTH_TOKEN", "cb1af94b-28f0-4d76-b82).37c4df023c2c")
+# --- CONFIGURATION ---
+AUTH_TOKEN = os.environ.get("AUTH_TOKEN", "cb1af94b-28f0-4d76-b829-37c4df023c2c")
 DEVICE_ID = os.environ.get("DEVICE_ID", "c47bb81b535832546db3f7f016eb01a0")
 
 BRIDGE_CLIENTS = set()
 PRICE_HISTORY = []
 
-def calculate_logic(prices, period=14):
-    if len(prices) < period + 1:
-        return {"rsi": 50.0, "trend": "COLLECTING"}
-    gains, losses = [], []
-    for i in range(1, period + 1):
+def calculate_indicators(prices):
+    if len(prices) < 15:
+        return {"rsi": 50.0, "ema": prices[-1] if prices else 0}
+    
+    # Simple RSI
+    gains = []
+    losses = []
+    for i in range(1, 15):
         diff = prices[-i] - prices[-(i+1)]
         gains.append(max(diff, 0))
         losses.append(max(-diff, 0))
-    avg_gain = sum(gains) / period
-    avg_loss = sum(losses) / period
+    
+    avg_gain = sum(gains) / 14
+    avg_loss = sum(losses) / 14
     rs = avg_gain / (avg_loss if avg_loss > 0 else 0.00001)
     rsi = 100 - (100 / (1 + rs))
-    trend = "UP" if prices[-1] > (sum(prices[-20:])/20 if len(prices)>=20 else prices[0]) else "DOWN"
-    return {"rsi": round(rsi, 2), "trend": trend}
+    
+    # EMA 20
+    ema = sum(prices[-20:]) / len(prices[-20:])
+    
+    return {"rsi": round(rsi, 2), "ema": round(ema, 6)}
 
-class ZiroEngine:
+class TitaniumEngine:
     def __init__(self, loop):
         self.loop = loop
         self.ws = None
@@ -32,89 +39,93 @@ class ZiroEngine:
     async def broadcast(self, data):
         if BRIDGE_CLIENTS:
             msg = json.dumps(data)
-            for client in list(BRIDGE_CLIENTS):
-                try: await client.send_str(msg)
-                except: BRIDGE_CLIENTS.discard(client)
+            await asyncio.gather(*[client.send_str(msg) for client in list(BRIDGE_CLIENTS)], return_exceptions=True)
 
     def on_message(self, ws, message):
-        # PAKSA PRINT SEMUA DATA YANG MASUK KE LOG RENDER
-        print(f">> DATA MENTAH: {message}") 
         try:
-            data = json.loads(message)
-            # ... sisa kode lainnya ...
-            data = json.loads(message)
-            # Menangkap data dari berbagai jenis pesan Stockity
-            target = data.get("data", []) if "data" in data else [data]
-            for item in target:
+            raw = json.loads(message)
+            # Support for both single and batch updates
+            data_list = raw.get("data", [raw]) if isinstance(raw, dict) else []
+            
+            for item in data_list:
                 assets = item.get("assets", [])
                 for asset in assets:
                     if asset.get("ric") == "Z-CRY/IDX":
-                        self.process_price(float(asset["rate"]))
-        except: pass
+                        price = float(asset.get("rate") or asset.get("price"))
+                        self.process_tick(price)
+        except:
+            pass
 
-    def process_price(self, price):
+    def process_tick(self, price):
         PRICE_HISTORY.append(price)
         if len(PRICE_HISTORY) > 100: PRICE_HISTORY.pop(0)
-        analysis = calculate_logic(PRICE_HISTORY)
+        
+        ind = calculate_indicators(PRICE_HISTORY)
+        
+        # Data Packet for Frontend
         packet = {
-            "price": price, "rsi": analysis["rsi"], 
-            "trend": analysis["trend"], "timestamp": time.time(),
-            "ema": sum(PRICE_HISTORY[-10:])/10 if len(PRICE_HISTORY)>=10 else price
+            "price": price,
+            "rsi": ind["rsi"],
+            "ema": ind["ema"],
+            "bb_up": ind["ema"] * 1.0008,
+            "bb_low": ind["ema"] * 0.9992,
+            "timestamp": time.strftime('%H:%M:%S')
         }
+        
         asyncio.run_coroutine_threadsafe(self.broadcast(packet), self.loop)
-        print(f">> STREAMING: {price}")
+        # Terminal log for Render monitoring
+        if len(PRICE_HISTORY) % 5 == 0: 
+            print(f">> TITAN TICK: {price} | RSI: {ind['rsi']}")
 
     def on_open(self, ws):
-        print(">> JEMBATAN TERBUKA. MENGIRIM SURAT PERINTAH...")
-        # Perintah 1: Subscribe Asset
+        print(">> TITAN CORE ONLINE: SUBSCRIBING TO STREAM...")
+        # Dual-Command Strategy for high compatibility
         ws.send(json.dumps({"type": "subscribe", "assets": [{"ric": "Z-CRY/IDX"}]}))
-        # Perintah 2: Aktifkan Quote Stream
         ws.send(json.dumps({"type": "subscribe_quotes", "rics": ["Z-CRY/IDX"]}))
-        
-    def start_connection(self):
-        def run_ws():
+
+    def start(self):
+        def run():
             while True:
                 try:
                     self.ws = WebSocketApp(
                         "wss://as.stockitymob.com/",
-                        header={"authorization-token": AUTH_TOKEN, "device-id": DEVICE_ID},
+                        header={
+                            "authorization-token": AUTH_TOKEN, 
+                            "device-id": DEVICE_ID,
+                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"
+                        },
                         on_message=self.on_message,
                         on_open=self.on_open
                     )
-                    self.ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE}, ping_interval=15)
+                    # Increased ping for Cloud Stability
+                    self.ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE}, ping_interval=20, ping_timeout=10)
                 except: pass
                 time.sleep(5)
-
-        def run_fetch_fallback():
-            # Backup: Ambil data via HTTP jika WS macet
-            while True:
-                try:
-                    # Simulasi fetch jika WS tidak memberikan data dalam 10 detik
-                    if not BRIDGE_CLIENTS: continue
-                    time.sleep(10)
-                except: pass
-
-        threading.Thread(target=run_ws, daemon=True).start()
-        threading.Thread(target=run_fetch_fallback, daemon=True).start()
+        threading.Thread(target=run, daemon=True).start()
 
 async def handle_ws(request):
     ws = web.WebSocketResponse(autoping=True, heartbeat=30.0)
     await ws.prepare(request)
     BRIDGE_CLIENTS.add(ws)
+    try:
+        async for msg in ws: pass
+    finally:
+        BRIDGE_CLIENTS.discard(ws)
     return ws
 
 async def main():
     loop = asyncio.get_running_loop()
-    ZiroEngine(loop).start_connection()
+    TitaniumEngine(loop).start()
+    
     app = web.Application()
-    app.router.add_get('/', lambda r: web.FileResponse('./index.html'))
-    app.router.add_get('/web.html', lambda r: web.FileResponse('./web.html'))
+    app.router.add_get('/', lambda r: web.FileResponse('./web.html'))
     app.router.add_get('/ws', handle_ws)
+    
     port = int(os.environ.get("PORT", 10000))
     runner = web.AppRunner(app)
     await runner.setup()
     await web.TCPSite(runner, '0.0.0.0', port).start()
-    print(f"TITANIUM SERVER LIVE ON PORT {port}")
+    print(f"--- TITANIUM SERVER READY ON PORT {port} ---")
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
