@@ -37,7 +37,11 @@ class ZiroEngine:
                 except: BRIDGE_CLIENTS.discard(client)
 
     def on_message(self, ws, message):
+        # PAKSA PRINT SEMUA DATA YANG MASUK KE LOG RENDER
+        print(f">> DATA MENTAH: {message}") 
         try:
+            data = json.loads(message)
+            # ... sisa kode lainnya ...
             data = json.loads(message)
             # Menangkap data dari berbagai jenis pesan Stockity
             target = data.get("data", []) if "data" in data else [data]
