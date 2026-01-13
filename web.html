@@ -1,126 +1,103 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TITANIUM PHOENIX v2.0</title>
+    <title>PHOENIX | DASHBOARD</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #020202; color: #e0e0e0; font-family: 'Rajdhani', sans-serif; overflow-x: hidden; }
-        .neon-text { text-shadow: 0 0 10px rgba(0, 255, 65, 0.5); }
-        .glass-card { background: rgba(15, 15, 15, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
-        .bar-glow { box-shadow: 0 0 15px rgba(0, 255, 65, 0.3); }
-        #price { font-family: 'Orbitron', sans-serif; }
+        body { background: #020617; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; }
+        .card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(30, 41, 59, 1); border-radius: 1rem; }
+        .price-up { color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
+        .price-down { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
     </style>
 </head>
 <body class="p-4 md:p-8">
-    <div class="max-w-5xl mx-auto mb-8 flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-bold tracking-widest text-white italic">TITANIUM <span class="text-emerald-500">PHOENIX</span></h1>
-            <p class="text-xs text-emerald-500/50 tracking-tighter">QUANTUM CONNECTION BRIDGE ACTIVE</p>
-        </div>
-        <div id="status-tag" class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-500 animate-pulse">
-            SYSTEM STABLE
-        </div>
-    </div>
-
-    <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <div class="glass-card p-6 rounded-3xl col-span-1 md:col-span-2">
-            <h3 class="text-gray-500 text-sm font-medium mb-2 uppercase tracking-widest">Market Value (Z-CRY/IDX)</h3>
-            <div id="price" class="text-6xl md:text-7xl font-bold text-white mb-2">0.00000</div>
-            <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></div>
-                <span class="text-[10px] text-gray-400 uppercase tracking-widest">Live Feed from Asia Cluster</span>
+    <div class="max-w-6xl mx-auto space-y-6">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+            <div>
+                <h2 class="text-xl font-bold italic text-sky-400">PHOENIX COMMAND CENTER</h2>
+                <p class="text-[10px] text-slate-500">ASSET: Z-CRY/IDX (CRYPTO IDX)</p>
+            </div>
+            <div id="status" class="text-[10px] bg-slate-800 px-3 py-1 rounded-full text-slate-400 uppercase tracking-widest">
+                Connecting...
             </div>
         </div>
 
-        <div class="glass-card p-6 rounded-3xl flex flex-col justify-center items-center text-center">
-            <h3 class="text-gray-500 text-sm font-medium mb-4 uppercase tracking-widest">AI Decision</h3>
-            <div id="signal-box" class="p-4 rounded-2xl border border-white/5 w-full">
-                <div id="signal-text" class="text-2xl font-black text-gray-700">ANALYZING...</div>
-                <div id="signal-desc" class="text-[10px] text-gray-500 mt-1 uppercase">Waiting for Data Stream</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="card p-6 md:col-span-2">
+                <p class="text-xs text-slate-500 mb-2 uppercase">Real-Time Market Value</p>
+                <h1 id="price" class="text-6xl font-black tracking-tighter">000.0000</h1>
+            </div>
+            <div class="card p-6 flex flex-col justify-center items-center">
+                <p class="text-xs text-slate-500 mb-2 uppercase">Next Candle In</p>
+                <h1 id="countdown" class="text-4xl font-bold text-sky-500">00:00</h1>
             </div>
         </div>
 
-        <div class="glass-card p-6 rounded-3xl col-span-1 md:col-span-3">
-            <div class="flex justify-between items-end mb-4">
-                <h3 class="text-gray-500 text-sm font-medium uppercase tracking-widest">Majority Opinion</h3>
-                <div class="text-right">
-                    <span class="text-emerald-400 text-xl font-bold" id="call-pct">50%</span>
-                    <span class="text-gray-600 mx-2">VS</span>
-                    <span class="text-rose-500 text-xl font-bold" id="put-pct">50%</span>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="card p-6">
+                <p class="text-xs text-slate-500 mb-4 uppercase">Majority Opinion (%)</p>
+                <div class="w-full bg-slate-800 h-8 rounded-full overflow-hidden flex">
+                    <div id="call-bar" class="bg-emerald-500 h-full transition-all duration-500" style="width: 50%"></div>
+                    <div id="put-bar" class="bg-red-500 h-full transition-all duration-500" style="width: 50%"></div>
+                </div>
+                <div class="flex justify-between mt-2 text-[10px] font-bold">
+                    <span class="text-emerald-400">CALL: <span id="call-val">50</span>%</span>
+                    <span class="text-red-400">PUT: <span id="put-val">50</span>%</span>
                 </div>
             </div>
-            <div class="w-full h-4 bg-zinc-800 rounded-full overflow-hidden flex bar-glow">
-                <div id="call-bar" class="h-full bg-emerald-500 transition-all duration-700 ease-out" style="width: 50%"></div>
-                <div id="put-bar" class="h-full bg-rose-600 transition-all duration-700 ease-out" style="width: 50%"></div>
-            </div>
-            <div class="flex justify-between mt-2 text-[10px] text-gray-500 uppercase tracking-widest">
-                <span>Bullish Strength</span>
-                <span>Bearish Strength</span>
+            <div class="card p-6">
+                <p class="text-xs text-slate-500 mb-2 uppercase">Phoenix RSI (14)</p>
+                <h1 id="rsi" class="text-4xl font-bold">50.00</h1>
             </div>
         </div>
-
     </div>
 
     <script>
-        const priceEl = document.getElementById('price');
-        const callBar = document.getElementById('call-bar');
-        const putBar = document.getElementById('put-bar');
-        const callPct = document.getElementById('call-pct');
-        const putPct = document.getElementById('put-pct');
-        const sigText = document.getElementById('signal-text');
-        const sigBox = document.getElementById('signal-box');
-        const sigDesc = document.getElementById('signal-desc');
+        // Sesuaikan dengan link Render Anda
+        const socket = new WebSocket(`wss://${window.location.host}/ws`);
+        let lastPrice = 0;
 
-        // Koneksi ke Backend Render
-        const socket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
+        socket.onopen = () => {
+            document.getElementById('status').innerText = 'System Stable';
+            document.getElementById('status').classList.replace('text-slate-400', 'text-emerald-400');
+        };
 
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-
+            
             if (data.type === 'tick') {
-                const oldPrice = parseFloat(priceEl.innerText);
-                priceEl.innerText = data.price.toFixed(5);
-                priceEl.classList.toggle('text-emerald-400', data.price > oldPrice);
-                priceEl.classList.toggle('text-rose-400', data.price < oldPrice);
+                const priceEl = document.getElementById('price');
+                const price = data.price.toFixed(4);
+                
+                // Animasi Warna Harga
+                if (data.price > lastPrice) priceEl.className = 'text-6xl font-black tracking-tighter price-up';
+                else if (data.price < lastPrice) priceEl.className = 'text-6xl font-black tracking-tighter price-down';
+                
+                priceEl.innerText = price;
+                lastPrice = data.price;
+
+                // RSI & Countdown
+                document.getElementById('rsi').innerText = data.rsi.toFixed(2);
+                
+                const mins = Math.floor(data.countdown / 60);
+                const secs = Math.floor(data.countdown % 60);
+                document.getElementById('countdown').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             }
 
             if (data.type === 'sentiment') {
-                const call = data.data.call;
-                const put = data.data.put;
-                
-                callBar.style.width = call + '%';
-                putBar.style.width = put + '%';
-                callPct.innerText = call + '%';
-                putPct.innerText = put + '%';
-
-                // LOGIKA SIGNAL
-                if (call >= 65) {
-                    sigText.innerText = "STRONG BUY";
-                    sigText.className = "text-3xl font-black text-emerald-500 neon-text";
-                    sigBox.style.borderColor = "rgba(16, 185, 129, 0.4)";
-                    sigDesc.innerText = "Heavy Bullish Pressure Detected";
-                } else if (put >= 65) {
-                    sigText.innerText = "STRONG SELL";
-                    sigText.className = "text-3xl font-black text-rose-500";
-                    sigBox.style.borderColor = "rgba(225, 29, 72, 0.4)";
-                    sigDesc.innerText = "Heavy Bearish Pressure Detected";
-                } else {
-                    sigText.innerText = "NEUTRAL";
-                    sigText.className = "text-2xl font-black text-gray-500";
-                    sigBox.style.borderColor = "rgba(255, 255, 255, 0.05)";
-                    sigDesc.innerText = "Market Sideways - Wait";
-                }
+                document.getElementById('call-bar').style.width = data.data.call + '%';
+                document.getElementById('put-bar').style.width = data.data.put + '%';
+                document.getElementById('call-val').innerText = data.data.call;
+                document.getElementById('put-val').innerText = data.data.put;
             }
         };
 
         socket.onclose = () => {
-            document.getElementById('status-tag').innerText = "CONNECTION LOST - RECONNECTING...";
-            document.getElementById('status-tag').className = "px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-[10px] text-rose-500";
+            document.getElementById('status').innerText = 'Offline - Reconnecting...';
+            document.getElementById('status').classList.replace('text-emerald-400', 'text-red-400');
         };
     </script>
 </body>
-    </html>
+</html>
