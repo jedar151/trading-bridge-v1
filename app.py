@@ -161,7 +161,7 @@ async def main():
     app.router.add_get('/ws', handle_ws)
     
     # Ambil port dari Environment (Render) atau default 8080 (Lokal)
-    port = int(os.environ.get("PORT", 8080))
+    port = int(os.environ.get("PORT", 1000))
     
     runner = web.AppRunner(app)
     await runner.setup()
