@@ -3,34 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Titanium Gateway</title>
+    <title>TITANIUM GATEWAY v23.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background: #050505; color: #00ff41; font-family: 'Courier New', Courier, monospace; }
-        .log-container { height: 70vh; overflow-y: auto; border: 1px solid #1a1a1a; padding: 10px; background: rgba(0,0,0,0.5); }
+        .log-container { height: 65vh; overflow-y: auto; border: 1px solid #1a1a1a; padding: 10px; background: rgba(0,0,0,0.8); }
         .status-on { color: #00ff41; text-shadow: 0 0 10px #00ff41; }
         .status-off { color: #ff003c; text-shadow: 0 0 10px #ff003c; }
+        .neon-btn { border: 1px solid #00ff41; transition: 0.3s; }
+        .neon-btn:hover { background: #00ff41; color: black; }
     </style>
 </head>
 <body class="p-6">
     <div class="max-w-md mx-auto">
-        <h1 class="text-xl font-bold mb-2">TITANIUM GATEWAY v23.0</h1>
+        <div class="mb-6 text-center">
+            <h1 class="text-2xl font-black tracking-tighter">TITANIUM SERVER</h1>
+            <p class="text-[10px] text-gray-500 uppercase tracking-widest">Quantum Connection Bridge</p>
+        </div>
         
-        <div class="flex justify-between items-center mb-4 bg-black/50 p-3 rounded-lg border border-white/10">
+        <div class="flex justify-between items-center mb-4 bg-zinc-900/50 p-4 rounded-xl border border-white/5">
             <div>
-                <p class="text-[10px] text-gray-500">BRIDGE STATUS</p>
-                <p id="status-text" class="status-off font-black">DISCONNECTED</p>
+                <p class="text-[9px] text-gray-400">SYSTEM STATUS</p>
+                <p id="status-text" class="status-off font-bold">OFFLINE</p>
             </div>
-            <button onclick="toggleConnect()" id="btn-sync" class="bg-white/5 border border-white/20 px-4 py-2 rounded text-[10px] hover:bg-white/10">LINK</button>
+            <button onclick="toggleConnect()" id="btn-sync" class="neon-btn px-6 py-2 rounded-full text-xs font-bold">LINK SYSTEM</button>
         </div>
 
-        <div id="log-screen" class="log-container rounded-lg text-[11px] mb-4">
-            <div class="text-gray-600">>> Awating Command...</div>
+        <div id="log-screen" class="log-container rounded-xl text-[10px] mb-4">
+            <div class="text-gray-600">>> System Idle. Waiting for User Link...</div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2">
-            <a href="/web.html" class="block text-center bg-zinc-900 border border-white/10 py-3 rounded-lg text-[10px] hover:bg-zinc-800">BUKA DASHBOARD</a>
-            <button onclick="clearLog()" class="bg-zinc-900 border border-white/10 py-3 rounded-lg text-[10px]">CLEAR LOG</button>
+        <div class="grid grid-cols-2 gap-3">
+            <button onclick="window.location.href='/web.html'" class="bg-white/5 border border-white/10 py-4 rounded-xl text-[10px] font-bold hover:bg-white/10">OPEN DASHBOARD</button>
+            <button onclick="clearLog()" class="bg-zinc-900 border border-white/10 py-4 rounded-xl text-[10px]">CLEAR LOG</button>
         </div>
     </div>
 
@@ -40,7 +45,7 @@
         function addLog(msg, color = "text-gray-400") {
             const logScreen = document.getElementById('log-screen');
             const div = document.createElement('div');
-            div.className = `mb-1 ${color}`;
+            div.className = `mb-1 py-1 border-b border-white/5 ${color}`;
             div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
             logScreen.prepend(div);
             if (logScreen.childNodes.length > 50) logScreen.lastChild.remove();
@@ -52,42 +57,34 @@
                 return;
             }
 
-            // AUTO-PROTOCOL SAKTI
             const protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
             const wsUrl = protocol + location.host + '/ws';
             
-            addLog("Attempting connection to: " + wsUrl, "text-blue-400");
-            
+            addLog("HANDSHAKE: " + wsUrl, "text-blue-400");
             socket = new WebSocket(wsUrl);
 
             socket.onopen = () => {
                 document.getElementById('status-text').innerText = "STABLE";
-                document.getElementById('status-text').className = "status-on font-black";
-                document.getElementById('btn-sync').innerText = "STOP";
-                addLog("TITANIUM LINK ESTABLISHED", "text-bullish");
+                document.getElementById('status-text').className = "status-on font-bold";
+                document.getElementById('btn-sync').innerText = "TERMINATE";
+                addLog("CONNECTION ESTABLISHED. DATA FLOWING...", "text-green-400");
             };
 
             socket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                addLog(`TICK: ${data.price} | RSI: ${data.rsi}`, "text-green-500");
+                addLog(`INCOMING PRICE: ${data.price} | RSI: ${data.rsi}`, "text-white");
             };
 
             socket.onclose = () => {
                 socket = null;
-                document.getElementById('status-text').innerText = "DISCONNECTED";
-                document.getElementById('status-text').className = "status-off font-black";
-                document.getElementById('btn-sync').innerText = "LINK";
-                addLog("LINK LOST. RECONNECTING...", "text-critical");
-            };
-
-            socket.onerror = (err) => {
-                addLog("SECURITY BLOCK OR SERVER DOWN", "text-red-500");
+                document.getElementById('status-text').innerText = "OFFLINE";
+                document.getElementById('status-text').className = "status-off font-bold";
+                document.getElementById('btn-sync').innerText = "LINK SYSTEM";
+                addLog("CONNECTION TERMINATED.", "text-red-500");
             };
         }
 
-        function clearLog() {
-            document.getElementById('log-screen').innerHTML = "";
-        }
+        function clearLog() { document.getElementById('log-screen').innerHTML = ""; }
     </script>
 </body>
 </html>
