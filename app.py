@@ -125,6 +125,6 @@ if __name__ == "__main__":
     # Jalankan Mesin Pengambil Data
     threading.Thread(target=tester.run_ws, daemon=True).start()
     
-    # Jalankan Siaran Render
-    port = int(os.environ.get("PORT", 8080))
-    web.run_app(app, port=port, loop=loop)
+    # KUNCI UTAMA: Gunakan Port 10000 agar sinkron dengan Render
+    print(">> MEMBUKA SIARAN PADA PORT 10000")
+    web.run_app(app, port=10000, loop=loop)
