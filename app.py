@@ -128,34 +128,33 @@ if __name__ == '__main__':
     import asyncio
     import time
 
-    # 1. Inisialisasi Jalur Data (Loop)
+    # 1. BUAT LOOP MANDIRI
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-    # 2. Fungsi Terminal (Hunter) dengan Delay Agresif
-    def jalankan_terminal():
-        # Jeda 10 detik: Biarkan Render mendeteksi Port 8080 dengan tenang
-        print("⏳ Menunggu Terminal Web stabil...")
-        time.sleep(10) 
-        print("⚡ Terminal Ditemukan! Menghubungkan ke Stockity...")
+    # 2. FUNGSI HUNTER DENGAN DELAY (Agar Render Senang Dulu)
+    def start_hunter_silent():
+        # Jangan ganggu Render selama 15 detik pertama
+        print("⏳ Menunggu Render menstabilkan Port 8080...")
+        time.sleep(15)
+        print("🎯 Render Puas, Sekarang Menyalakan Mesin Hunter...")
         try:
             engine = ZiroEngine(loop)
             engine.run()
         except Exception as e:
-            print(f"❌ Terminal Error: {e}")
+            print(f"❌ Mesin Error: {e}")
 
-    # Jalankan Terminal di jalur belakang
-    t = threading.Thread(target=jalankan_terminal, daemon=True)
+    # Jalankan Hunter di Thread Terpisah
+    t = threading.Thread(target=start_hunter_silent, daemon=True)
     t.start()
 
-    # 3. Kunci Port 8080 (Tanpa Negosiasi)
-    # Kita pancing Render agar hanya melihat port ini
-    print("🚀 TERMINAL ACTIVE ON PORT: 8080")
+    # 3. JALANKAN SERVER WEB SECEPAT MUNGKIN
+    # Ambil Port dari Render atau paksa ke 8080
+    port = int(os.environ.get("PORT", 8080))
+    print(f"🚀 TERMINAL AKTIF DI PORT: {port}")
     
-    try:
-        web.run_app(app, host="0.0.0.0", port=8080, loop=loop)
-    except Exception as e:
-        print(f"⚠️ Port 8080 Conflict: {e}")
+    # Gunakan 'access_log=None' agar server sangat ringan
+    web.run_app(app, host="0.0.0.0", port=port, loop=loop, access_log=None)
