@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZIROD DASHBOARD</title>
+    <style>
+        body { background: #0a0a0a; color: #00ff41; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .container { border: 2px solid #00ff41; padding: 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); text-align: center; width: 300px; }
+        .price { font-size: 2.5em; font-weight: bold; margin: 10px 0; color: #ffffff; }
+        .rsi { font-size: 1.2em; color: #00ff41; }
+        .status { font-size: 0.8em; margin-top: 15px; opacity: 0.7; }
+        .btn-hunter { margin-top: 20px; padding: 10px; border: 1px solid #00ff41; color: #00ff41; text-decoration: none; display: inline-block; transition: 0.3s; }
+        .btn-hunter:hover { background: #00ff41; color: #000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>LIVE Z-CRY/IDX</div>
+        <div class="price" id="price">0.00000000</div>
+        <div class="rsi">RSI: <span id="rsi">00.0</span></div>
+        <div class="status" id="status">CONNECTING...</div>
+        <a href="/hunter" class="btn-hunter">BUKA TERMINAL HUNTER</a>
+    </div>
+
+    <script>
+        function connect() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const socket = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            socket.onopen = () => { document.getElementById('status').innerText = "SYSTEM ONLINE"; };
+            
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if(data.price) document.getElementById('price').innerText = data.price.toFixed(8);
+                if(data.rsi) document.getElementById('rsi').innerText = data.rsi.toFixed(1);
+            };
+
+            socket.onclose = () => {
+                document.getElementById('status').innerText = "RECONNECTING...";
+                setTimeout(connect, 2000);
+            };
+        }
+        connect();
+    </script>
+</body>
+</html>
