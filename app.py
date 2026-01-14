@@ -123,22 +123,39 @@ app.add_routes([
 ])
 
 if __name__ == '__main__':
-    # 1. BUAT LOOP MANUALLY (Obat Python 3.13)
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    import os
+    import threading
+    import asyncio
+    import time
 
-    # 2. JALANKAN ENGINE DI BACKGROUND THREAD
-    def start_engine():
-        engine = ZiroEngine(loop)
-        engine.run()
+    # 1. Inisialisasi Jalur Data (Loop)
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
-    t = threading.Thread(target=start_engine, daemon=True)
+    # 2. Fungsi Terminal (Hunter) dengan Delay Agresif
+    def jalankan_terminal():
+        # Jeda 10 detik: Biarkan Render mendeteksi Port 8080 dengan tenang
+        print("⏳ Menunggu Terminal Web stabil...")
+        time.sleep(10) 
+        print("⚡ Terminal Ditemukan! Menghubungkan ke Stockity...")
+        try:
+            engine = ZiroEngine(loop)
+            engine.run()
+        except Exception as e:
+            print(f"❌ Terminal Error: {e}")
+
+    # Jalankan Terminal di jalur belakang
+    t = threading.Thread(target=jalankan_terminal, daemon=True)
     t.start()
-    print("🎯 ZIROD ENGINE ONLINE")
 
-    # 3. JALANKAN SERVER (Jawab tantangan Port Render)
-    port = int(os.environ.get("PORT", 8080))
-    print(f"🚀 SERVER STARTING ON PORT {port}")
+    # 3. Kunci Port 8080 (Tanpa Negosiasi)
+    # Kita pancing Render agar hanya melihat port ini
+    print("🚀 TERMINAL ACTIVE ON PORT: 8080")
     
-    # Menjalankan app dengan loop yang sudah kita buat
-    web.run_app(app, host="0.0.0.0", port=port, loop=loop)
+    try:
+        web.run_app(app, host="0.0.0.0", port=8080, loop=loop)
+    except Exception as e:
+        print(f"⚠️ Port 8080 Conflict: {e}")
