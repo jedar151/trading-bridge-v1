@@ -1,79 +1,201 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TITANIUM PHOENIX | GATEWAY</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background: radial-gradient(circle, #0f172a 0%, #020617 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; color: white; font-family: 'Inter', sans-serif; }
-        .glow-button { background: linear-gradient(45deg, #0ea5e9, #2563eb); transition: all 0.3s ease; box-shadow: 0 0 20px rgba(14, 165, 233, 0.4); }
-        .glow-button:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(14, 165, 233, 0.6); }
-    </style>
-</head>
-<body>
-    <div class="text-center space-y-8 p-10 bg-slate-900/50 rounded-3xl border border-slate-800 backdrop-blur-xl">
-        <h1 class="text-4xl font-black tracking-tighter italic">TITANIUM <span class="text-sky-500">PHOENIX</span></h1>
-        <p class="text-slate-400 text-sm tracking-widest uppercase">Hybrid Cloud Intelligence System</p>
-        <div class="py-4">
-            <button onclick="window.location.href='/web.html'" class="glow-button px-12 py-4 rounded-full text-xs font-bold tracking-widest uppercase cursor-pointer">
-                Initialize System
-            </button>
-        </div>
-        <p class="text-[10px] text-slate-600 tracking-widest uppercase">System Stable: 2026.01.13</p>
-    </div>
-</body>
-</html>
-
-
-<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PHOENIX SYSTEM GATEWAY</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>PHOENIX QUANTUM TERMINAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%); color: white; font-family: 'Orbitron', sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .glow-button { background: transparent; border: 1px solid #10b981; color: #10b981; transition: all 0.5s; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
-        .glow-button:hover { background: #10b981; color: black; box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); transform: scale(1.05); }
-        .scanline { width: 100%; height: 100px; z-index: 10; background: linear-gradient(0deg, rgba(0,255,128,0) 0%, rgba(0,255,128,0.05) 50%, rgba(0,255,128,0) 100%); opacity: 0.1; position: absolute; bottom: 100%; animation: scan 3s linear infinite; }
-        @keyframes scan { to { bottom: -100px; } }
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
+        
+        :root {
+            --neon: #00ff41;
+            --neon-red: #ff003c;
+            --terminal-bg: #000a00;
+        }
+
+        body {
+            background-color: #000;
+            color: var(--neon);
+            font-family: 'JetBrains Mono', monospace;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .terminal-shell {
+            width: 95%;
+            max-width: 420px;
+            height: 92vh;
+            background: rgba(0, 10, 0, 0.95);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            border-radius: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.1);
+        }
+
+        .glow-text { text-shadow: 0 0 10px var(--neon); }
+        .glow-red { text-shadow: 0 0 10px var(--neon-red); color: var(--neon-red); }
+        
+        .price-up { color: var(--neon); text-shadow: 0 0 20px var(--neon); }
+        .price-down { color: var(--neon-red); text-shadow: 0 0 20px var(--neon-red); }
+
+        .progress-bar {
+            height: 4px;
+            background: #1a1a1a;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 2px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: var(--neon); }
     </style>
 </head>
 <body>
-    <div class="scanline"></div>
-    
-    <div class="text-center z-20">
-        <div class="mb-6 opacity-50 text-[10px] tracking-[0.5em] uppercase">Secure Terminal Access</div>
-        <h1 class="text-4xl md:text-6xl font-black mb-2 tracking-tighter">TITANIUM <span class="text-emerald-500">PHOENIX</span></h1>
-        <p class="text-gray-500 text-xs mb-10 tracking-widest uppercase">Quantum Trading Interface v2.0</p>
-        
-        <div class="space-y-4">
-            <a href="/web.html" class="glow-button px-10 py-4 rounded-full text-sm font-bold inline-block tracking-widest uppercase">
-                Initialize System
-            </a>
+
+    <div class="terminal-shell border-t-4 border-t-green-500">
+        <div class="p-6 border-b border-green-900/30">
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-[10px] font-black tracking-[0.3em] opacity-50 uppercase">Neural Bridge V2</span>
+                <div id="status-led" class="flex items-center gap-2">
+                    <span id="status-text" class="text-[9px] font-bold">OFFLINE</span>
+                    <div class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></div>
+                </div>
+            </div>
+            <h1 class="text-xl font-black tracking-tighter glow-text italic">PHOENIX QUANTUM</h1>
         </div>
 
-        <div class="mt-20 grid grid-cols-3 gap-8 opacity-30">
-            <div>
-                <div class="text-[8px] uppercase">Connection</div>
-                <div class="text-xs text-emerald-500">SECURE</div>
+        <div class="flex-1 flex flex-col p-6 overflow-hidden">
+            <div class="text-center mb-8">
+                <div id="asset-label" class="text-[8px] bg-green-500/10 inline-block px-3 py-1 rounded-full border border-green-500/20 mb-4 opacity-70 uppercase tracking-widest">Z-CRY/IDX (Neural Feed)</div>
+                <div id="price-main" class="text-5xl font-black tracking-tighter tabular-nums opacity-20 transition-all duration-75">0.00000000</div>
             </div>
-            <div>
-                <div class="text-[8px] uppercase">Cluster</div>
-                <div class="text-xs text-emerald-500">ASIA-NRT</div>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-black/50 border border-green-900/40 p-4 rounded-xl">
+                    <div class="text-[7px] uppercase opacity-40 mb-1 font-bold">RSI Oscillator</div>
+                    <div id="rsi-val" class="text-lg font-black tracking-tight">50.00</div>
+                    <div class="progress-bar mt-2">
+                        <div id="rsi-bar" class="h-full bg-green-500 transition-all" style="width: 50%"></div>
+                    </div>
+                </div>
+                <div class="bg-black/50 border border-green-900/40 p-4 rounded-xl">
+                    <div class="text-[7px] uppercase opacity-40 mb-1 font-bold">Network Ping</div>
+                    <div id="ping-val" class="text-lg font-black tracking-tight text-blue-400">0ms</div>
+                    <div class="text-[7px] opacity-40 mt-2 uppercase">Sync: <span id="sync-val">0%</span></div>
+                </div>
             </div>
-            <div>
-                <div class="text-[8px] uppercase">Status</div>
-                <div class="text-xs text-emerald-500">ENCRYPTED</div>
+
+            <div class="mb-8">
+                <div class="flex justify-between text-[8px] font-bold uppercase mb-2">
+                    <span class="text-green-500">Call <span id="call-pct">50%</span></span>
+                    <span class="text-red-500">Put <span id="put-pct">50%</span></span>
+                </div>
+                <div class="progress-bar flex">
+                    <div id="call-bar" class="h-full bg-green-500 transition-all" style="width: 50%"></div>
+                    <div id="put-bar" class="h-full bg-red-500 transition-all" style="width: 50%"></div>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-hidden flex flex-col">
+                <div class="text-[7px] uppercase opacity-30 mb-2 font-bold tracking-widest">Neural Console</div>
+                <div id="console" class="flex-1 overflow-y-auto text-[8px] space-y-1 custom-scroll opacity-40 italic">
+                    <div>> System initialized...</div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        console.log("Gateway Ready. Awaiting Initialization...");
+        // PENTING: Ganti dengan URL Render Anda!
+        const CONFIG = {
+            wsUrl: "wss://bridgev1.onrender.com/ws", 
+            reconnectInterval: 3000
+        };
+
+        let state = {
+            socket: null,
+            lastPrice: 0,
+            reconnects: 0
+        };
+
+        function addLog(msg, color = "") {
+            const consoleEl = document.getElementById('console');
+            const div = document.createElement('div');
+            div.className = color;
+            div.innerText = `> [${new Date().toLocaleTimeString()}] ${msg}`;
+            consoleEl.prepend(div);
+            if(consoleEl.children.length > 15) consoleEl.lastChild.remove();
+        }
+
+        function connect() {
+            if (state.socket) state.socket.close();
+
+            addLog("Attempting Neural Handshake...");
+            state.socket = new WebSocket(CONFIG.wsUrl);
+
+            state.socket.onopen = () => {
+                state.reconnects = 0;
+                document.getElementById('status-text').innerText = "CONNECTED";
+                document.getElementById('status-led').children[1].className = "w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_#00ff41]";
+                document.getElementById('sync-val').innerText = "100%";
+                addLog("Neural Bridge Active.", "text-green-400 font-bold");
+            };
+
+            state.socket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === "tick") {
+                        const priceEl = document.getElementById('price-main');
+                        const rsiEl = document.getElementById('rsi-val');
+                        
+                        // Update Price
+                        const price = parseFloat(data.price);
+                        priceEl.innerText = price.toFixed(8);
+                        priceEl.style.opacity = "1";
+
+                        if (price > state.lastPrice) priceEl.className = "text-5xl font-black tracking-tighter tabular-nums price-up";
+                        else if (price < state.lastPrice) priceEl.className = "text-5xl font-black tracking-tighter tabular-nums price-down";
+                        
+                        state.lastPrice = price;
+
+                        // Update RSI
+                        rsiEl.innerText = data.rsi.toFixed(2);
+                        document.getElementById('rsi-bar').style.width = data.rsi + "%";
+                        if (data.rsi >= 70) rsiEl.className = "text-lg font-black tracking-tight text-red-500";
+                        else if (data.rsi <= 30) rsiEl.className = "text-lg font-black tracking-tight text-green-500";
+                        else rsiEl.className = "text-lg font-black tracking-tight text-white";
+
+                        // Update Opinions
+                        document.getElementById('call-pct').innerText = data.call_pct + "%";
+                        document.getElementById('put-pct').innerText = data.put_pct + "%";
+                        document.getElementById('call-bar').style.width = data.call_pct + "%";
+                        document.getElementById('put-bar').style.width = data.put_pct + "%";
+                        
+                        // Update Ping
+                        document.getElementById('ping-val').innerText = Math.floor(Math.random() * 30 + 15) + "ms";
+                    }
+                } catch (e) { }
+            };
+
+            state.socket.onclose = () => {
+                document.getElementById('status-text').innerText = "RECONNECTING";
+                document.getElementById('status-led').children[1].className = "w-2 h-2 rounded-full bg-red-600 animate-pulse";
+                document.getElementById('price-main').style.opacity = "0.2";
+                
+                state.reconnects++;
+                addLog("Link Severed. Retrying...", "text-red-400");
+                setTimeout(connect, CONFIG.reconnectInterval);
+            };
+        }
+
+        window.onload = connect;
     </script>
 </body>
 </html>
